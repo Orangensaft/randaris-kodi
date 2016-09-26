@@ -10,7 +10,9 @@ URLS = {
 "en":"http://randaris-anime.net/serie/english",
 "de": "http://randaris-anime.net/serie/german",
 "all": "http://randaris-anime.net/serie/full"
+"base" : "http://randaris-anime.net/serie/alpha/"
 }
+SELECT_SERIES = "tbody > tr > td > a"
 
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
@@ -44,21 +46,34 @@ def addDir(name,mode,**kwargs):
 
 def endOfDir():
     xbmcplugin.endOfDirectory(addon_handle)
-    
+
+def crawl(url):
+    return []
 mode = args.get('mode', None)
 
 print "MODE: "+str(mode)
 if mode is None: #main menu
-    addDir("A - Z","langSwitch")
+    addDir("A - Z","letters")
     addDir("Search","search")
     endOfDir()
 
-elif mode[0] == "langSwitch": #switch between ger, eng, all
-    addDir("German","all",lang="de")
-    addDir("English","all",lang="en")
-    addDir("All","all",lang="all")
+elif mode[0] == "letters": #switch between ger, eng, all
+    for c in "#ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        addDir(str(c),"showLetter",letter=str(c))
     endOfDir()
 
+elif mode[0] == "showLetter":
+    page = args.get("page","")
+    letter = args["letter"][0]
+    letter = "asc" if letter=="#" else letter
+    addDir("Series starting with "+str(letter),"showLetter",letter=letter)
+    toCrawl = URLS["base"]+letter+"/"+page
+    series = crawl(toCrawl)
+    for s in series: #add entries
+        addDir(s["name"],"sUrl","url"="")
+    #add pages
+    endOfDir()
+    
 elif mode[0] == "all":
     lang = args["lang"][0]
     listUrl = URLS[lang]
